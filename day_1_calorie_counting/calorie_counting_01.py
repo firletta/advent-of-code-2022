@@ -1,9 +1,8 @@
 # 2022 Advent of Code Day 1
 from os import read
-from File_Location import Day1_2022
 
 # Read calorie inventory file.
-with open(Day1_2022) as f:
+with open("input.txt") as f:
     data = f.read()
 f.close()
 
