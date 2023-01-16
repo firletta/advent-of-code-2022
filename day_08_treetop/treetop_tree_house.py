@@ -1,51 +1,50 @@
-input_file = open("input-8.txt","r")
-input_data = input_file.read()
-forest = input_data.split("\n")
+import numpy as np
 
-hidden_trees = 0
-
-for i in range(0,99):
-    for j in range(0,99):
-        current_tree = forest[i][j]
-        hidden = []
-        if i == 0 or i == 98:
-            pass
-        if j == 0 or j == 98:
-            pass
-
-        top = forest[0:i-1]
-        bottom = forest[i+1:98]
-        left = []
-        right = []
-        for k in range(0,i-1):
-            left.append(forest[k][j])
-        for l in range(i+1,98):
-            right.append(forest[l][j])
-
-        for tree in top:
-            if tree >= current_tree:
-                hidden.append("top")
-                break
-        for tree in bottom:
-            if tree >= current_tree:
-                hidden.append("bottom")
-                break
-        for tree in left:
-            if tree >= current_tree:
-                hidden.append("left")
-                break
-        for tree in right:
-            if tree >= current_tree:
-                hidden.append("right")
-                break
-        if len(hidden) == 4:
-            hidden_trees += 1
-
-all_trees = 99 * 99
-visible_trees = all_trees - hidden_trees
+with open('input-8.txt', 'r') as f:
+    tree_lines = f.readlines()
+    tree_lines = [line.strip() for line in tree_lines]
 
 
-print(visible_trees)
+# ---------- PART 1 ----------
+trees = np.zeros((len(tree_lines), len(tree_lines[0])), dtype=int)
+for i, line in enumerate(tree_lines):
+    trees[i, :] = np.array(list(line))
+
+# the edges are always visible
+visible_trees = 2*len(tree_lines[0]) + 2 *(len(tree_lines)-2)
+
+# iterate over trees
+for i in range(1, trees.shape[0]-1):
+    for j in range(1, trees.shape[1]-1):
+        tree_column = trees[:, j] - trees[i, j]
+        tree_row = trees[i, :] - trees[i, j]
+        routes = [tree_row[:j], tree_row[j+1:], tree_column[:i], tree_column[i+1:]]
+        if sum(list(map(lambda route: (route<0).all(), routes))) > 0:
+            visible_trees += 1
+
+print("Part 1:", visible_trees)
+
+# ---------- PART 2 ----------
+
+scenic_scores = np.zeros((len(tree_lines), len(tree_lines[0])), dtype=int)
+
+def compute_scenic_score(route):
+    big_trees_array = list(route >= 0)
+    if True in big_trees_array:
+        return big_trees_array.index(True) + 1
+    else:
+        return len(big_trees_array)
+
+# iterate over trees
+for i in range(1, trees.shape[0]-1):
+    for j in range(1, trees.shape[1]-1):
+        tree_column = trees[:, j] - trees[i, j]
+        tree_row = trees[i, :] - trees[i, j]
+        # left, right, up, down
+        routes = [tree_row[j-1::-1], tree_row[j+1:], tree_column[i-1::-1], tree_column[i+1:]]
+        scenic_scores[i,j] = np.prod(list(map(compute_scenic_score, routes)))
+    
+print("Part 1:", np.max(scenic_scores))
 
 
 
